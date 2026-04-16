@@ -1,45 +1,115 @@
-<script>
-  function init() {
-    const container = document.getElementById("reviews");
-
-    try {
-      const dummyMapDiv = document.createElement("div");
-      const map = new google.maps.Map(dummyMapDiv);
-      const service = new google.maps.places.PlacesService(map);
-
-      const placeId = "ChIJ0YJiiW-rMioRjoA8YxBVKGk";
-
-      service.getDetails(
-        {
-          placeId: placeId,
-          fields: ["name", "rating", "reviews"]
-        },
-        (place, status) => {
-          container.innerHTML = "";
-
-          if (status !== google.maps.places.PlacesServiceStatus.OK) {
-            container.innerHTML = "<div style='color:red;font-size:24px'>Google error: " + status + "</div>";
-            return;
-          }
-
-          if (!place || !place.reviews || place.reviews.length === 0) {
-            container.innerHTML = "<div style='color:orange;font-size:24px'>No reviews found.</div>";
-            return;
-          }
-
-          const topReviews = place.reviews.slice(0, 4);
-
-          container.innerHTML = topReviews.map(r => `
-            <div class="card">
-              <div class="author">${r.author_name || "Anonymous"}</div>
-              <div class="rating">⭐ ${r.rating || "-"}/5</div>
-              <div class="text">${r.text || "No text"}</div>
-            </div>
-          `).join("");
-        }
-      );
-    } catch (err) {
-      container.innerHTML = "<div style='color:red;font-size:24px'>Script error: " + err.message + "</div>";
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Google Reviews Screen</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #fff;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
     }
-  }
-</script>
+    .wrap {
+      padding: 30px;
+    }
+    .title {
+      font-size: 36px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .reviews {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .card {
+      background: #111;
+      border: 1px solid #333;
+      border-radius: 16px;
+      padding: 20px;
+      min-height: 180px;
+    }
+    .author {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .rating {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+    .text {
+      font-size: 18px;
+      line-height: 1.5;
+    }
+    .error {
+      color: #ff8080;
+      font-size: 20px;
+      text-align: center;
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="title">Customer Reviews</div>
+    <div id="reviews" class="reviews"></div>
+  </div>
+
+  <script>
+    function init() {
+      const container = document.getElementById("reviews");
+
+      try {
+        const dummyMapDiv = document.createElement("div");
+        const map = new google.maps.Map(dummyMapDiv);
+        const service = new google.maps.places.PlacesService(map);
+
+        const placeId = "ChIJ0YJiiW-rMioRjoA8YxBVKGk";
+
+        service.getDetails(
+          {
+            placeId: placeId,
+            fields: ["name", "rating", "reviews"]
+          },
+          (place, status) => {
+            console.log("Status:", status);
+            console.log("Place:", place);
+
+            if (status !== google.maps.places.PlacesServiceStatus.OK) {
+              container.innerHTML = `<div class="error">Google Places error: ${status}</div>`;
+              return;
+            }
+
+            if (!place || !place.reviews || place.reviews.length === 0) {
+              container.innerHTML = `<div class="error">No reviews found for this place.</div>`;
+              return;
+            }
+
+            const topReviews = place.reviews.slice(0, 4);
+
+            container.innerHTML = topReviews.map(r => `
+              <div class="card">
+                <div class="author">${r.author_name || "Anonymous"}</div>
+                <div class="rating">⭐ ${r.rating || "-"}/5</div>
+                <div class="text">${r.text || "No review text available."}</div>
+              </div>
+            `).join("");
+          }
+        );
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div class="error">Script error: ${err.message}</div>`;
+      }
+    }
+  </script>
+
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_REAL_API_KEY&libraries=places&callback=init"
+    async
+    defer>
+  </script>
+</body>
+</html>
